@@ -14,8 +14,12 @@ export default function setup(settings) {
 
         const particles = [];
 
+        let graphics;
+
         p.setup = () => {
-            p.createCanvas(width * multiplier, height * multiplier);
+            graphics = p.createGraphics(width * multiplier, height * multiplier);
+
+            const canvas = p.createCanvas(width, height);
 
             let divideIndex = 0;
 
@@ -28,7 +32,7 @@ export default function setup(settings) {
                 if (randoms[0] < 0.5) colors = randoms[1];
             
                 if (spawnAllowed(randoms[2], w, h, z)) {
-                    const particle = spawnParticle(multiplier, p, randoms[5], x, y, w, h);
+                    const particle = spawnParticle(multiplier, pp5, randoms[5], x, y, w, h);
                     particles.push(particle);
                     return;
                 }
@@ -48,12 +52,12 @@ export default function setup(settings) {
                     divide(pp5, x, y + h * ratio, w, h * (1 - ratio), z - 1, colors);
                 }
             
-                p.pop()
+                pp5.pop()
             }
 
-            divide(p, 0, 0, width, height, 12);
+            divide(graphics, 0, 0, width, height, 12);
 
-            p.noStroke();
+            graphics.noStroke();
 
             p.noLoop();
 
@@ -64,59 +68,31 @@ export default function setup(settings) {
             });
 
             swear.promise.then(() => {
-                const image = p.get(
-                    (crop.x * multiplier) - (crop.width * multiplier) / 2,
-                    (crop.y * multiplier) - (crop.height * multiplier) / 2,
-                    crop.width * multiplier,
-                    crop.height * multiplier
-                );
-                
-                function tempCanvas(pp) {
-                    let tempSwear = PromiseOutside();
-
-                    pp.setup = () => {
-                        const canvas = pp.createCanvas(crop.width * multiplier, crop.height * multiplier);
-
-                        pp.noStroke();
-                        pp.noLoop();
-
-                        tempSwear.promise.then(() => {
-                            pp.saveCanvas(canvas, 'out', 'png').then(f => {
-                                console.log("Success to get image");
-                            }).catch((f) => {
-                                console.log(`failed to save canvas. ${f}`);
-                            });
-                        });
-                    };
-
-                    pp.draw = () => {
-                        pp.background(255);
-                        pp.image(
-                            image, 
-                            0, 
-                            0, 
-                            crop.width * multiplier,
-                            crop.height * multiplier
-                        );
-                        pp.push();
-                        pp.pop();
-                        pp.noStroke();
-                        tempSwear.resolve(true);
-                    };
-                }
-
-                p5.createSketch(tempCanvas);
+                p.saveCanvas(canvas, 'out', 'png').then(f => {
+                    console.log("Success to get image");
+                }).catch((f) => {
+                    console.log(`failed to save canvas. ${f}`);
+                });                
             });
         }
 
         p.draw = () => {
-            p.background(255);
+            graphics.background(255);
 
-            particles.forEach(particle => particle.draw(p));
+            particles.forEach(particle => particle.draw(graphics));
 
-            p.push();
-            p.pop();
-            p.noStroke();
+            const image = graphics.get(
+                (crop.x * multiplier) - (crop.width * multiplier) / 2,
+                (crop.y * multiplier) - (crop.height * multiplier) / 2,
+                (crop.width * multiplier),
+                (crop.height * multiplier)
+            )
+
+            p.image(image, 0, 0, width, height);
+
+            graphics.push();
+            graphics.pop();
+            graphics.noStroke();
 
             swear.resolve(true);
         }

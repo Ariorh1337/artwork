@@ -165,8 +165,8 @@ export default class PlotPreview extends React.Component {
 
         this.leftCanvas = p5.get( 0, 0, this.width!, this.height!);
         this.rightCanvas = p5.get(
-            this.pointer!.x - this.previewSize! / 2, 
-            this.pointer!.y - this.previewSize! / 2,
+            this.pointer!.x - (this.previewSize! / 2), 
+            this.pointer!.y - (this.previewSize! / 2),
             this.previewSize!, 
             this.previewSize!
         );
