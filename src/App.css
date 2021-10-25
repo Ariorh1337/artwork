@@ -1,0 +1,67 @@
+.App {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sketch {
+  position: relative;
+  width: 625px;
+  height: 625px;
+  overflow: hidden;
+}
+
+.wrapper {
+  display: flex;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.button {
+  display: flex;
+  font-size: 20px;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  margin: 0 8px;
+  transition: background 250ms ease;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.button:active {
+  background: rgba(0, 0, 0, 0.20);
+}
+
+.canvas {
+  position: absolute;
+  transform: scale(0.05);
+  top: -950%;
+  left: -950%;
+}
+
+.preview {
+  margin-left: 16px;
+  position: absolute;
+  transform: scale(0.39);
+  top: -78%;
+  left: -78%;
+}
