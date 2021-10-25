@@ -52,9 +52,9 @@ export default class PlotPreview extends React.Component {
         this.p5 = p5;
 
         this.pointer = { x: 0, y: 0 };
-        this.drawSize = 5000;
+        this.drawSize = 10000;
         this.canvasSize = 800;
-        this.multiplier = 6;
+        this.multiplier = 3;
 
         this.particles = [];
         this.devideHistory = [];
