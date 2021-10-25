@@ -34,10 +34,10 @@ export class Particle {
         p5.pop()
     }
 
-    update(p5, width, height) {
+    update(p5, width, height, data) {
         this.p.add(this.v)
-        this.p.x += p5.random()
-        this.p.y += p5.random()
+        this.p.x += data.x;
+        this.p.y += data.y;
         let ang = p5.atan2(this.p.x - width / 2, this.p.y - height / 2)
 
         this.p.x += p5.sin(this.p.y / (this.curve + this.size.x * 5) + ang * 50) / 2
@@ -46,6 +46,6 @@ export class Particle {
         this.v.add(this.a)
         this.v.mult(0.99)
         this.size.mult(this.shrinkRatio)
-        this.ang += this.angV + p5.random() / 50 + p5.sin(ang * 10) / 100
+        this.ang += this.angV + data.angV / 50 + p5.sin(ang * 10) / 100
     }
 }

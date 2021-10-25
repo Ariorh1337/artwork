@@ -8,13 +8,16 @@ import PromiseOutside from "../../universe/PromiseOutside.mjs";
 
 export default function setup(settings) {
     let swear = PromiseOutside();
+    let drawIndex = 1;
 
     function sketch(p) {
         const { multiplier, width, height, randomData, particleData, crop } = settings;
 
         const particles = [];
 
-        let graphics;
+        const maxDraw = Math.max(...particleData.map(p => p.length));
+
+        let graphics, prevState;
 
         p.setup = () => {
             graphics = p.createGraphics(width * multiplier, height * multiplier);
@@ -59,17 +62,32 @@ export default function setup(settings) {
 
             graphics.noStroke();
 
-            p.noLoop();
-
             particleData.forEach((data, index) => {
                 particles[index].curve = data[0].curve;
                 particles[index].angV = data[0].angV;
                 particles[index].shrinkRatio = data[0].shrinkRatio;
             });
 
+            let interval;
+            interval = setInterval(() => {
+                particles.forEach((particle, index) => {
+                    const data = particleData[index][drawIndex];
+                    if (!data) return;
+    
+                    particle.update(graphics, width, height, data);
+                });
+
+                drawIndex = drawIndex + 1;
+
+                if (drawIndex > maxDraw) {
+                    clearInterval(interval);
+                    swear.resolve(true);
+                }
+            }, 1000);
+
             swear.promise.then(() => {
-                p.saveCanvas(canvas, 'out', 'png').then(f => {
-                    console.log("Success to get image");
+                p.saveCanvas(canvas, `out_${Number(new Date())}`, 'png').then(f => {
+                    console.log(`Success to get image. Name: ${f} - `, Number(new Date()));
                 }).catch((f) => {
                     console.log(`failed to save canvas. ${f}`);
                 });                
@@ -79,7 +97,11 @@ export default function setup(settings) {
         p.draw = () => {
             graphics.background(255);
 
+            if (prevState) graphics.image(prevState, 0, 0, width * multiplier, height * multiplier);
+
             particles.forEach(particle => particle.draw(graphics));
+
+            prevState = graphics.get();
 
             const image = graphics.get(
                 (crop.x * multiplier) - (crop.width * multiplier) / 2,
@@ -93,10 +115,10 @@ export default function setup(settings) {
             graphics.push();
             graphics.pop();
             graphics.noStroke();
-
-            swear.resolve(true);
         }
     }
+
+    console.log("Image requested: ", Number(new Date()));
 
     p5.createSketch(sketch);
 
