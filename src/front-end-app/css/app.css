@@ -51,17 +51,12 @@
   background: rgba(0, 0, 0, 0.20);
 }
 
-.canvas {
-  position: absolute;
-  transform: scale(0.05);
-  top: -950%;
-  left: -950%;
+.canvas > canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
-.preview {
-  margin-left: 16px;
-  position: absolute;
-  transform: scale(0.39);
-  top: -78%;
-  left: -78%;
+.preview > canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
