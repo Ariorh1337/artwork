@@ -4,15 +4,18 @@ import React from "react";
 import Sketch from "react-p5";
 import { RiArrowGoForwardLine, RiSave3Line } from 'react-icons/ri';
 import p5Types from "p5"; //Import this for typechecking and intellisense
-import { colors1, colors2, Particle } from "./Particle";
+
 import PreviewImage from "./PreviewImage";
 import PromiseOutside from "../extra/PromiseOutside";
+
+import { colors1, colors2, Particle } from "./Particle";
 
 export default class PlotPreview extends React.Component {
     p5?: p5Types;
     pointer?: { x: number; y: number; };
     drawSize?: number;
     canvasSize?: number;
+    multiplier?: number;
     particles?: Particle[];
     devideHistory?: any[];
     promises: { 
@@ -49,13 +52,14 @@ export default class PlotPreview extends React.Component {
         this.p5 = p5;
 
         this.pointer = { x: 0, y: 0 };
-        this.drawSize = 2000;
+        this.drawSize = 5000;
         this.canvasSize = 800;
+        this.multiplier = 6;
 
         this.particles = [];
         this.devideHistory = [];
 
-        this.previewSize = this.drawSize / 10;
+        this.previewSize = this.drawSize / this.multiplier;
         this.width = this.drawSize;
         this.height = this.drawSize;
 
@@ -78,6 +82,7 @@ export default class PlotPreview extends React.Component {
         });
 
         this.divide(p5, 0, 0, this.width!, this.height!, 12);
+
         p5.noStroke();
     }
 
@@ -173,7 +178,27 @@ export default class PlotPreview extends React.Component {
 
     drawRectangleBounds = (p5: p5Types) => {}
 
-    save() {}
+    save() {
+        fetch("http://localhost:5000/setup", {
+            headers: {
+                "Content-Type": `application/json`
+            },
+            method: "POST",
+            body: JSON.stringify({
+                multiplier: this.multiplier,
+                width: this.width,
+                height: this.height,
+                randomData: this.devideHistory,
+                particleData: this.particles!.map((data) => data.randoms),
+                crop: {
+                    x: this.pointer!.x,
+                    y: this.pointer!.y,
+                    width: this.previewSize,
+                    height: this.previewSize,
+                }
+            })
+        }).then(r => r.text())
+    }
 
     next() {
         this.particles!.forEach(particle => {

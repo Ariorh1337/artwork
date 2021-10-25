@@ -13,7 +13,7 @@ export default class App extends React.Component<any, AppState> {
 	constructor(props: any) {
 		super(props);
 		
-		this.eventSource = new EventSource("http://localhost:5000/events");
+		this.eventSource = new EventSource("http://localhost:5000/handshake");
 	}
 
 	componentDidMount() {
@@ -24,7 +24,6 @@ export default class App extends React.Component<any, AppState> {
 	}
 	
 	updateFlightState(flightState: any) {
-		console.log(this.state.data);
 		const newData = this.state.data.map((item: any) => {
 			if (item.flight === flightState.flight) {
 				item.state = flightState.state;
