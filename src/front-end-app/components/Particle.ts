@@ -14,7 +14,19 @@ export class Particle {
     shrinkRatio: number;
     randoms: any[];
 
-    constructor(p5: p5Types, data?: { p?: p5Types.Vector, v?: p5Types.Vector, size?: p5Types.Vector, color: p5Types.Color }) {
+    constructor(
+        p5: p5Types,
+        data?: { 
+            p?: p5Types.Vector,
+            v?: p5Types.Vector,
+            size?: p5Types.Vector,
+            color: p5Types.Color
+        },
+        downScale?: {
+            size: number,
+            simulationSize: number
+        }
+    ) {
         this.p = data?.p ?? p5.createVector(0, 0);
         this.v = data?.v ?? p5.createVector(0, 0);
         this.size = data?.size ?? p5.createVector(0, 0);
@@ -24,12 +36,20 @@ export class Particle {
         this.curve = p5.random(10, 30);
         this.angV = p5.random(-0.015, 0.015);
         this.shrinkRatio = p5.random(0.99, 0.995);
+
         this.randoms = [];
         this.randoms.push({
             curve: this.curve,
             angV: this.angV,
             shrinkRatio: this.shrinkRatio
-        })
+        });
+
+        // Down scale
+        const scale = downScale!.size / downScale!.simulationSize;
+        this.p.x *= scale;
+        this.p.y *= scale;
+        this.size.x *= scale;
+        this.size.y *= scale;
     }
 
     draw(p5: p5Types) {

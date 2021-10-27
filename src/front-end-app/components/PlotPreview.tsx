@@ -6,84 +6,61 @@ import { RiArrowGoForwardLine, RiSave3Line } from 'react-icons/ri';
 import p5Types from "p5"; //Import this for typechecking and intellisense
 
 import PreviewImage from "./PreviewImage";
-import PromiseOutside from "../extra/PromiseOutside";
 
 import { colors1, colors2, Particle } from "./Particle";
 
 export default class PlotPreview extends React.Component {
     p5?: p5Types;
     pointer?: { x: number; y: number; };
-    drawSize?: number;
-    canvasSize?: number;
-    multiplier?: number;
+
+    //
+    simulationSize: number;
+    exportSize: number;
+    size: number;
+    zoom: number;
+    
+    // Randoms for server
     particles?: Particle[];
     devideHistory?: any[];
-    promises: { 
-        leftCanvasLoaded: { 
-            promise: Promise<unknown>;
-            resolve: (value: unknown) => void;
-            reject: (value: unknown) => void; 
-        };
-        rightCanvasLoaded: { 
-            promise: Promise<unknown>;
-            resolve: (value: unknown) => void;
-            reject: (value: unknown) => void;
-        };
-    };
-    previewSize?: number;
-    width: any;
-    height: any;
+
+    // Render
     prevState?: p5Types.Image;
     leftCanvas?: p5Types.Image;
     rightCanvas?: p5Types.Image;
 
+    //Buttons
+    nextEnabled = true;
+
     constructor(data: any) {
         super(data);
 
-        this.promises = {
-            leftCanvasLoaded: PromiseOutside(),
-            rightCanvasLoaded: PromiseOutside(),
-        };
+        this.simulationSize = 100000;
+        this.exportSize = 10000;
+        
+        // canvas preview size
+        this.size = 1000;
 
-        (window as any).PlotPreview = this;
+        // zoomed draw size of left canvas
+        this.zoom = this.size / (this.simulationSize / this.exportSize); 
+
+        // default pointer
+        this.pointer = { x: this.size / 2, y: this.size / 2 };
+
+        this.particles = [];
+        this.devideHistory = [];
     }
 
     setup(p5: p5Types) {
         this.p5 = p5;
 
-        this.pointer = { x: 0, y: 0 };
-        this.drawSize = 10000;
-        this.canvasSize = 800;
-        this.multiplier = 3;
-
-        this.particles = [];
-        this.devideHistory = [];
-
-        this.previewSize = this.drawSize / this.multiplier;
-        this.width = this.drawSize;
-        this.height = this.drawSize;
-
-        const dummyCanvas = p5.createCanvas(100, 100);
-        dummyCanvas.id("dummyCanvas");
+        p5.createCanvas(this.size, this.size);
         p5.noCanvas();
-        p5.resizeCanvas(this.width, this.height);
 
-        this.promises.leftCanvasLoaded.resolve((canvasParentRef: Element) => {
-            const canvasRef = canvasParentRef.children[0] as HTMLCanvasElement;
-
-            canvasRef.addEventListener('mousedown', e => {
-                this.pointer = this.pointerToPossition(canvasRef, e);
-            });
-
-            return this.drawRectangleBounds.bind(this);
-        });
-        this.promises.rightCanvasLoaded.resolve(() => {
-            return () => {};
-        });
-
-        this.divide(p5, 0, 0, this.width!, this.height!, 12);
+        this.divide(p5, 0, 0, this.simulationSize, this.simulationSize, 12);
 
         p5.noStroke();
+
+        p5.noLoop();
     }
 
     divide(p5: p5Types, x: number, y: number, w: number, h: number, z: number, colors = colors1) {
@@ -108,9 +85,9 @@ export default class PlotPreview extends React.Component {
         }
     
         p5.push();
-        p5.translate(w / 2, (this.height! / 2));
+        p5.translate(w / 2, (this.size! / 2));
         p5.rotate(-p5.sin(z / 10) / 10);
-        p5.translate((-this.width! / 2), (-this.height! / 2));
+        p5.translate((-this.size! / 2), (-this.size! / 2));
     
         const ratio = randoms[3];
     
@@ -125,23 +102,60 @@ export default class PlotPreview extends React.Component {
         p5.pop()
     }
 
-    pointerToPossition(canvas: HTMLCanvasElement, event: any) {
-        const rect = canvas.getBoundingClientRect();
+    draw(p5: p5Types) {
+        p5.background(255);
 
-        const canvasX = event.pageX - rect.left;
-        const canvasY = event.pageY - rect.top;
+        if (this.prevState) p5.image(this.prevState, 0, 0, this.size, this.size );
 
-        const canvasXOffset = canvasX / (rect.width / 100);
-        const canvasYOffset = canvasY / (rect.height / 100);
+        this.particles!.forEach(p => p.draw(p5));
 
-        return {
-            x: (this.drawSize! / 100) * canvasXOffset,
-            y: (this.drawSize! / 100) * canvasYOffset,
-        }
+        this.prevState = p5.get();
+
+        this.leftCanvas = p5.get( 0, 0, this.size, this.size );
+        this.rightCanvas = p5.get(
+            this.pointer!.x - this.zoom / 2,
+            this.pointer!.y - this.zoom / 2,
+            this.zoom,
+            this.zoom
+        );
+
+        p5.push();
+        p5.pop();
+        p5.noStroke();
     }
 
-    spawnAllowed(value: number, w: number, h: number, z: number) {
-        return !((value < (0.3 + z / 5) && w > 15 && h > 15 && z > 0) || z > 8);
+    save() {
+        fetch("http://localhost:5000/setup", {
+            headers: {
+                "Content-Type": `application/json`
+            },
+            method: "POST",
+            body: JSON.stringify({
+                pointer: this.pointer,
+                simulationSize: this.simulationSize,
+                exportSize: this.exportSize,
+                randomData: this.devideHistory,
+                particleData: this.particles!.map((data) => data.randoms),
+            })
+        }).then(r => r.text())
+    }
+
+    next() {
+        if (!this.nextEnabled) return;
+        this.nextEnabled = false;
+
+        this.particles!.forEach(particle => {
+            particle.update(this.p5!, this.simulationSize, this.simulationSize);
+        });
+
+        const draw = setInterval(() => {
+            this.draw(this.p5!);
+        }, 33);
+
+        setTimeout(() => {
+            clearInterval(draw);
+            this.nextEnabled = true;
+        }, 33 * 6);
     }
 
     spawnParticle(value: p5Types.Color, x: number, y: number, w: number, h: number) {
@@ -152,58 +166,26 @@ export default class PlotPreview extends React.Component {
             v: p5.createVector(p5.sin(x / 100) / 3, p5.cos(y / 100) / 3),
             size: p5.createVector(w, h),
             color: value
-        });
+        }, { size: this.size, simulationSize: this.simulationSize });
     }
 
-    draw(p5: p5Types) {
-        p5.background(255);
-        if (this.prevState) p5.image(this.prevState, 0, 0, this.width, this.height);
+    pointerToPossition(canvas: HTMLCanvasElement, event: any) {
+        const rect = canvas.getBoundingClientRect();
 
-        this.particles!.forEach(p => p.draw(p5));
+        const canvasX = event.pageX - rect.left;
+        const canvasY = event.pageY - rect.top;
 
-        this.prevState = p5.get();
+        const canvasXOffset = canvasX / (rect.width / 100);
+        const canvasYOffset = canvasY / (rect.height / 100);
 
-        this.leftCanvas = p5.get( 0, 0, this.width!, this.height!);
-        this.rightCanvas = p5.get(
-            this.pointer!.x - (this.previewSize! / 2), 
-            this.pointer!.y - (this.previewSize! / 2),
-            this.previewSize!, 
-            this.previewSize!
-        );
-
-        p5.push();
-        p5.pop();
-        p5.noStroke();
+        return {
+            x: (this.size / 100) * canvasXOffset,
+            y: (this.size / 100) * canvasYOffset,
+        }
     }
 
-    drawRectangleBounds = (p5: p5Types) => {}
-
-    save() {
-        fetch("http://localhost:5000/setup", {
-            headers: {
-                "Content-Type": `application/json`
-            },
-            method: "POST",
-            body: JSON.stringify({
-                multiplier: this.multiplier,
-                width: this.width,
-                height: this.height,
-                randomData: this.devideHistory,
-                particleData: this.particles!.map((data) => data.randoms),
-                crop: {
-                    x: this.pointer!.x,
-                    y: this.pointer!.y,
-                    width: this.previewSize,
-                    height: this.previewSize,
-                }
-            })
-        }).then(r => r.text())
-    }
-
-    next() {
-        this.particles!.forEach(particle => {
-            particle.update(this.p5!, this.width, this.height);
-        });
+    spawnAllowed(value: number, w: number, h: number, z: number) {
+        return !((value < (0.3 + z / 5) && w > 15 && h > 15 && z > 0) || z > 8);
     }
 
     render() {
@@ -212,22 +194,18 @@ export default class PlotPreview extends React.Component {
                 <div className="container">
                     <div className="sketch">
                         <Sketch className="canvas" setup={this.setup.bind(this)} draw={this.draw.bind(this)} />
-                        <PreviewImage 
-                            image={"leftCanvas"} 
-                            input={this.promises.leftCanvasLoaded}
-                            parent={this}
-                        />
+                        <PreviewImage name={"leftCanvas"} parent={this} />
                     </div>
                     <div className="controls">
-                        <button className="button" onClick={this.save.bind(this)}><RiSave3Line /></button>
+                        <button className="button" onClick={ console.log/* this.save.bind(this) */ }><RiSave3Line /></button>
                         <button className="button" onClick={this.next.bind(this)}><RiArrowGoForwardLine /></button>
                     </div>
                 </div>
-                <PreviewImage 
-                    image={"rightCanvas"}
-                    input={this.promises.rightCanvasLoaded}
-                    parent={this}
-                />
+                <div className="container">
+                    <div className="sketch">
+                        <PreviewImage name={"rightCanvas"} parent={this} />
+                    </div>
+                </div>
             </div>
         );
     }

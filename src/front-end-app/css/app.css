@@ -11,7 +11,7 @@
   width: 625px;
   height: 625px;
   overflow: hidden;
-  margin: 0px 20px;
+  box-shadow: 0px 0px 10px 2px black;
 }
 
 .wrapper {
@@ -21,6 +21,8 @@
 .container {
   display: flex;
   flex-direction: column;
+  margin-right: 15px;
+  margin-left: 15px;
 }
 
 .controls {
@@ -50,11 +52,6 @@
 
 .button:active {
   background: rgba(0, 0, 0, 0.20);
-}
-
-.canvas > canvas {
-  width: 100% !important;
-  height: 100% !important;
 }
 
 .preview > canvas {
