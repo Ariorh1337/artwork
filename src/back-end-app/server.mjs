@@ -1,8 +1,6 @@
 import * as http from "http";
 
-import setup from "./components/setup.mjs";
-import update from "./components/update.mjs";
-import save from "./components/save.mjs";
+import setup from "./setup.mjs";
 
 class Server {
 	storage = {};

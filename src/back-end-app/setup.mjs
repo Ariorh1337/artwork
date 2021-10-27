@@ -1,10 +1,10 @@
 import p5 from "node-p5";
 
-import spawnAllowed from "../../universe/spawnAllowed.mjs";
-import spawnParticle from "../../universe/spawnParticle.mjs";
-import { colors1 } from "../../universe/Particle.mjs";
+import spawnAllowed from "./components/spawnAllowed.mjs";
+import spawnParticle from "./components/spawnParticle.mjs";
+import { colors1 } from "./components/Particle.mjs";
 
-import PromiseOutside from "../../universe/PromiseOutside.mjs";
+import PromiseOutside from "./extra/PromiseOutside.mjs";
 
 export default function setup(settings) {
     let swear = PromiseOutside();
