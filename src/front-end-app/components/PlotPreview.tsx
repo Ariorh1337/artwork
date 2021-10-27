@@ -7,7 +7,10 @@ import p5Types from "p5"; //Import this for typechecking and intellisense
 
 import PreviewImage from "./PreviewImage";
 
-import { colors1, colors2, Particle } from "./Particle";
+import { colorsParse, Particle } from "./Particle";
+
+let colors1 = colorsParse(window.localStorage.getItem("colors1") || "fbaf00-ffd639-ffa3af-007cbe-00af54-fff-f24");
+let colors2 = colorsParse(window.localStorage.getItem("colors2") || "000-083d77-ebebd3-f4d35e-ee964b-f95738");
 
 export default class PlotPreview extends React.Component {
     p5?: p5Types;
@@ -131,11 +134,16 @@ export default class PlotPreview extends React.Component {
             },
             method: "POST",
             body: JSON.stringify({
-                pointer: this.pointer,
+                pointer: {
+                    x: this.pointer!.x * (this.simulationSize / this.size),
+                    y: this.pointer!.y * (this.simulationSize / this.size)
+                },
                 simulationSize: this.simulationSize,
                 exportSize: this.exportSize,
                 randomData: this.devideHistory,
                 particleData: this.particles!.map((data) => data.randoms),
+                colors1: colors1,
+                colors2: colors2
             })
         }).then(r => r.text())
     }
@@ -197,7 +205,7 @@ export default class PlotPreview extends React.Component {
                         <PreviewImage name={"leftCanvas"} parent={this} />
                     </div>
                     <div className="controls">
-                        <button className="button" onClick={ console.log/* this.save.bind(this) */ }><RiSave3Line /></button>
+                        <button className="button" onClick={this.save.bind(this)}><RiSave3Line /></button>
                         <button className="button" onClick={this.next.bind(this)}><RiArrowGoForwardLine /></button>
                     </div>
                 </div>

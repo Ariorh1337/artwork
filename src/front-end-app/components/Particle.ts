@@ -1,6 +1,8 @@
 import p5Types from "p5";
-export const colors1 = "fbaf00-ffd639-ffa3af-007cbe-00af54-fff-f24".split("-").map(a => "#" + a)
-export const colors2 = "000-083d77-ebebd3-f4d35e-ee964b-f95738".split("-").map(a => "#" + a)
+
+export const colorsParse = (text: string) => {
+    return text.split("-").map((a: string) => "#" + a);
+};
 
 export class Particle {
     p: p5Types.Vector;
