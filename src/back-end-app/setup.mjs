@@ -2,27 +2,34 @@ import p5 from "node-p5";
 
 import spawnAllowed from "./components/spawnAllowed.mjs";
 import spawnParticle from "./components/spawnParticle.mjs";
-import { colors1 } from "./components/Particle.mjs";
 
 import PromiseOutside from "./extra/PromiseOutside.mjs";
 
 export default function setup(settings) {
-    let swear = PromiseOutside();
-    let drawIndex = 1;
+    const swear = PromiseOutside();
 
     function sketch(p) {
-        const { multiplier, width, height, randomData, particleData, crop } = settings;
+        const { 
+            pointer,
+            simulationSize,
+            exportSize,
+            randomData,
+            particleData,
+            colors1,
+            colors2
+        } = settings;
+
+        const width = simulationSize;
+        const height = simulationSize;
 
         const particles = [];
 
         const maxDraw = Math.max(...particleData.map(p => p.length));
 
-        let graphics, prevState;
+        let prevState;
 
         p.setup = () => {
-            graphics = p.createGraphics(width * multiplier, height * multiplier);
-
-            const canvas = p.createCanvas(width, height);
+            const canvas = p.createCanvas(exportSize, exportSize);
 
             let divideIndex = 0;
 
@@ -35,7 +42,7 @@ export default function setup(settings) {
                 if (randoms[0] < 0.5) colors = randoms[1];
             
                 if (spawnAllowed(randoms[2], w, h, z)) {
-                    const particle = spawnParticle(multiplier, pp5, randoms[5], x, y, w, h);
+                    const particle = spawnParticle(pp5, randoms[5], x, y, w, h);
                     particles.push(particle);
                     return;
                 }
@@ -58,32 +65,18 @@ export default function setup(settings) {
                 pp5.pop()
             }
 
-            divide(graphics, 0, 0, width, height, 12);
+            const x = pointer.x - exportSize / 2;
+            const y = pointer.y - exportSize / 2;
 
-            graphics.noStroke();
+            divide(p, -x, -y, width, height, 12);
+
+            p.noStroke();
 
             particleData.forEach((data, index) => {
                 particles[index].curve = data[0].curve;
                 particles[index].angV = data[0].angV;
                 particles[index].shrinkRatio = data[0].shrinkRatio;
             });
-
-            let interval;
-            interval = setInterval(() => {
-                particles.forEach((particle, index) => {
-                    const data = particleData[index][drawIndex];
-                    if (!data) return;
-    
-                    particle.update(graphics, width, height, data);
-                });
-
-                drawIndex = drawIndex + 1;
-
-                if (drawIndex > maxDraw) {
-                    clearInterval(interval);
-                    swear.resolve(true);
-                }
-            }, 1000);
 
             swear.promise.then(() => {
                 p.saveCanvas(canvas, `out_${Number(new Date())}`, 'png').then(f => {
@@ -92,29 +85,50 @@ export default function setup(settings) {
                     console.log(`failed to save canvas. ${f}`);
                 });                
             });
+
+            p.noLoop();
+        }
+
+        let particleIndex = 1;
+        let drawIndex = 0;
+        const drawLoop = () => {
+            if (drawIndex >= 18) drawIndex = 0;
+            if (drawIndex !== 0) {
+                drawIndex += 1;
+                return p.draw();
+            }
+
+            particles.forEach((particle, index) => {
+                const data = particleData[index][particleIndex];
+                if (!data) return;
+
+                particle.update(p, width, height, data);
+            });
+
+            particleIndex += 1;
+
+            if (particleIndex > maxDraw) swear.resolve(true);
+            else p.draw();
         }
 
         p.draw = () => {
-            graphics.background(255);
+            p.background(255);
 
-            if (prevState) graphics.image(prevState, 0, 0, width * multiplier, height * multiplier);
+            if (prevState) p.image(prevState, 0, 0, exportSize, exportSize);
 
-            particles.forEach(particle => particle.draw(graphics));
+            particles.forEach(particle => particle.draw(p));
 
-            prevState = graphics.get();
+            prevState = p.get();
 
-            const image = graphics.get(
-                (crop.x * multiplier) - (crop.width * multiplier) / 2,
-                (crop.y * multiplier) - (crop.height * multiplier) / 2,
-                (crop.width * multiplier),
-                (crop.height * multiplier)
-            )
+            const image = p.get(0, 0, exportSize, exportSize);
 
-            p.image(image, 0, 0, width, height);
+            p.image(image, 0, 0, exportSize, exportSize);
 
-            graphics.push();
-            graphics.pop();
-            graphics.noStroke();
+            p.push();
+            p.pop();
+            p.noStroke();
+
+            drawLoop();
         }
     }
 

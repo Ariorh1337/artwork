@@ -9,12 +9,7 @@ import { Particle } from "./Particle.mjs";
  * @param {number} h
  * @returns {Particle}
  */
-export default function spawnParticle(multiplier, p5, value, x, y, w, h) {
-    x *= multiplier;
-    y *= multiplier;
-    w *= multiplier;
-    h *= multiplier;
-
+export default function spawnParticle(p5, value, x, y, w, h) {
     return new Particle(p5, {
         p: p5.createVector(x, y),
         v: p5.createVector(p5.sin(x / 100) / 3, p5.cos(y / 100) / 3),

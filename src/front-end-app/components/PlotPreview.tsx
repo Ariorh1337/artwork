@@ -37,8 +37,8 @@ export default class PlotPreview extends React.Component {
     constructor(data: any) {
         super(data);
 
-        this.simulationSize = 100000;
-        this.exportSize = 10000;
+        this.simulationSize = 10000;
+        this.exportSize = 2000;
         
         // canvas preview size
         this.size = 1000;
