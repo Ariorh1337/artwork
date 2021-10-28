@@ -12,7 +12,6 @@ export default class PreviewImage extends React.PureComponent<PreviewImageProps,
 	parent: any;
 	width: number;
 	height: number;
-	zoom: number;
 
 	constructor(data: any) {
         super(data);
@@ -21,7 +20,6 @@ export default class PreviewImage extends React.PureComponent<PreviewImageProps,
 		this.parent = this.props.parent;
 		this.width = this.parent.size;
 		this.height = this.parent.size;
-		this.zoom = this.parent.zoom;
     }
 
 	setup(p5: p5Types, canvasParentRef: Element) {
@@ -36,10 +34,10 @@ export default class PreviewImage extends React.PureComponent<PreviewImageProps,
 				this.parent.pointer = this.parent.pointerToPossition(canvasHTML, e);
 				//@TODO сделать заимствование более явным
 				this.parent.rightCanvas = this.parent.p5.get(
-					this.parent.pointer!.x - this.zoom / 2,
-					this.parent.pointer!.y - this.zoom / 2,
-					this.zoom,
-					this.zoom
+					this.parent.pointer!.x - this.parent.zoom / 2,
+					this.parent.pointer!.y - this.parent.zoom / 2,
+					this.parent.zoom,
+					this.parent.zoom
 				);
 			});
 		}
@@ -77,10 +75,10 @@ export default class PreviewImage extends React.PureComponent<PreviewImageProps,
         p5.stroke(93);
         p5.fill(0, 0, 0, 0)
 		p5.rect(
-			x - this.zoom / 2,
-			y - this.zoom / 2,
-			this.zoom,
-			this.zoom,
+			x - this.parent.zoom / 2,
+			y - this.parent.zoom / 2,
+			this.parent.zoom,
+			this.parent.zoom,
 		)
 	}
 }

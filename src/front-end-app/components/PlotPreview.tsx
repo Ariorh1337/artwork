@@ -1,16 +1,28 @@
 //// @ts-nocheck
 
-import React from "react";
+import React, { BaseSyntheticEvent } from "react";
 import Sketch from "react-p5";
-import { RiArrowGoForwardLine, RiSave3Line } from 'react-icons/ri';
+import { RiArrowGoForwardLine, RiSave3Line, RiRefreshLine } from 'react-icons/ri';
 import p5Types from "p5"; //Import this for typechecking and intellisense
 
 import PreviewImage from "./PreviewImage";
 
 import { colorsParse, Particle } from "./Particle";
 
-let colors1 = colorsParse(window.localStorage.getItem("colors1") || "fbaf00-ffd639-ffa3af-007cbe-00af54-fff-f24");
-let colors2 = colorsParse(window.localStorage.getItem("colors2") || "000-083d77-ebebd3-f4d35e-ee964b-f95738");
+const defaults = {
+    simulationSize: 10000,
+    exportSize: 2000,
+    colors1: "fbaf00-ffd639-ffa3af-007cbe-00af54-fff-f24",
+    colors2: "000-083d77-ebebd3-f4d35e-ee964b-f95738"
+}
+
+const simulationSize = Number(window.localStorage.getItem("simulationSize")) || defaults.simulationSize;
+const exportSize = Number(window.localStorage.getItem("exportSize")) || defaults.exportSize;
+const colors1raw = window.localStorage.getItem("colors1") || defaults.colors1;
+const colors2raw = window.localStorage.getItem("colors2") || defaults.colors2;
+
+const colors1 = colorsParse(colors1raw);
+const colors2 = colorsParse(colors2raw);
 
 export default class PlotPreview extends React.Component {
     p5?: p5Types;
@@ -37,8 +49,8 @@ export default class PlotPreview extends React.Component {
     constructor(data: any) {
         super(data);
 
-        this.simulationSize = 10000;
-        this.exportSize = 2000;
+        this.simulationSize = simulationSize;
+        this.exportSize = exportSize;
         
         // canvas preview size
         this.size = 1000;
@@ -196,8 +208,49 @@ export default class PlotPreview extends React.Component {
         return !((value < (0.3 + z / 5) && w > 15 && h > 15 && z > 0) || z > 8);
     }
 
+    saveSettings(event: BaseSyntheticEvent) {
+        const element = event.target as HTMLInputElement;
+
+        let { value, min, max } = event.target;
+
+        if (min && max && value) {
+            element.value = String(Math.max(Number(min), Math.min(Number(max), Number(value))));
+        }
+
+        // @ts-ignore
+        if (!element.value.trim()) element.value = defaults[element.id];
+
+        window.localStorage.setItem(element.id, element.value);
+    }
+
     render() {
         return (
+        <div>
+            <div className="container">
+                <div className="settings">
+                    <label>
+                        <b>Simulation size</b>
+                        <input type="number" defaultValue={simulationSize} id="simulationSize" min="100" max="300000" onChange={this.saveSettings} />
+                    </label>
+                    <label>
+                        <b>Export size</b>
+                        <input type="number" defaultValue={exportSize} id="exportSize" min="100" max="30000" onChange={(e) => {
+                            this.saveSettings(e);
+                            this.exportSize = Number(e.target.value);
+                            this.zoom = this.size / (this.simulationSize / this.exportSize);
+                            this.draw(this.p5!);
+                        }} />
+                    </label>
+                    <label>
+                        <b>Colors 1</b>
+                        <input type="text" defaultValue={colors1raw} id="colors1" onChange={this.saveSettings} />
+                    </label>
+                    <label>
+                        <b>Colors 2</b>
+                        <input type="text" defaultValue={colors2raw} id="colors2" onChange={this.saveSettings} />
+                    </label>
+                </div>
+            </div>
             <div className="wrapper">
                 <div className="container">
                     <div className="sketch">
@@ -205,6 +258,7 @@ export default class PlotPreview extends React.Component {
                         <PreviewImage name={"leftCanvas"} parent={this} />
                     </div>
                     <div className="controls">
+                        <button className="button" onClick={() => { window.location.reload() }}><RiRefreshLine /></button>
                         <button className="button" onClick={this.save.bind(this)}><RiSave3Line /></button>
                         <button className="button" onClick={this.next.bind(this)}><RiArrowGoForwardLine /></button>
                     </div>
@@ -215,6 +269,7 @@ export default class PlotPreview extends React.Component {
                     </div>
                 </div>
             </div>
+        </div>
         );
     }
 }
