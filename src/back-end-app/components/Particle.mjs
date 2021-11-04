@@ -11,16 +11,24 @@ export class Particle {
      * @param {?p5Types.Vector} data.size
      * @param {?p5Types.Color} data.color
      */
-    constructor(p5, data) {
+    constructor(p5, data, randoms, downScale = null) {
         this.p = data?.p ?? p5.createVector(0, 0);
         this.v = data?.v ?? p5.createVector(0, 0);
         this.size = data?.size ?? p5.createVector(0, 0);
         this.a = p5.createVector(0, 0);
         this.color = data?.color ?? p5.color(255);
-        this.curve = p5.random(10, 30);
-        this.angV = p5.random(-0.015, 0.015);
+        this.curve = randoms.curve;
+        this.angV = randoms.angV;
         this.ang = 0;
-        this.shrinkRatio = p5.random(0.99, 0.995);
+        this.shrinkRatio = randoms.shrinkRatio;
+
+        // Down scale
+        if (!downScale) return;
+        this.downScale = downScale;
+        //this.p.x *= downScale;
+        //this.p.y *= downScale;
+        //this.size.x *= downScale;
+        //this.size.y *= downScale;
     }
 
     draw(p5) {
@@ -34,18 +42,25 @@ export class Particle {
         p5.pop()
     }
 
-    update(p5, width, height, data) {
+    update(p5, x, y, width, height, data) {
         this.p.add(this.v)
-        this.p.x += data.x;
-        this.p.y += data.y;
-        let ang = p5.atan2(this.p.x - width / 2, this.p.y - height / 2)
 
-        this.p.x += p5.sin(this.p.y / (this.curve + this.size.x * 5) + ang * 50) / 2
+        this.p.x = -x + data.posX;
+        this.p.y = -y + data.posY;
 
-        this.p.y += p5.cos(this.p.x / (this.curve + this.size.y * 5) + ang * 50) / 2
         this.v.add(this.a)
         this.v.mult(0.99)
-        this.size.mult(this.shrinkRatio)
-        this.ang += this.angV + data.angV / 50 + p5.sin(ang * 10) / 100
+
+        this.size.mult(this.shrinkRatio);
+
+        this.ang = data.ang;
+
+        return { 
+            posX: this.p.x,
+            posY: this.p.y,
+            ang: this.ang,
+            sizeX: this.size.x,
+            sizeY: this.size.y,
+        };
     }
 }

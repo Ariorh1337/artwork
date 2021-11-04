@@ -152,30 +152,25 @@ export default class PlotPreview extends React.Component {
                 },
                 simulationSize: this.simulationSize,
                 exportSize: this.exportSize,
+                scale: this.size / this.simulationSize,
                 randomData: this.devideHistory,
                 particleData: this.particles!.map((data) => data.randoms),
                 colors1: colors1,
                 colors2: colors2
             })
-        }).then(r => r.text())
+        }).then(r => r.text()).then(r => console.log(r))
     }
 
     next() {
         if (!this.nextEnabled) return;
         this.nextEnabled = false;
 
-        this.particles!.forEach(particle => {
+        this.particles!.forEach((particle, index) => {
             particle.update(this.p5!, this.simulationSize, this.simulationSize);
         });
 
-        const draw = setInterval(() => {
-            this.draw(this.p5!);
-        }, 33);
-
-        setTimeout(() => {
-            clearInterval(draw);
-            this.nextEnabled = true;
-        }, 33 * 6);
+        this.draw(this.p5!);
+        this.nextEnabled = true;
     }
 
     spawnParticle(value: p5Types.Color, x: number, y: number, w: number, h: number) {
@@ -230,11 +225,11 @@ export default class PlotPreview extends React.Component {
                 <div className="settings">
                     <label>
                         <b>Simulation size</b>
-                        <input type="number" defaultValue={simulationSize} id="simulationSize" min="100" max="300000" onChange={this.saveSettings} />
+                        <input type="number" defaultValue={simulationSize} id="simulationSize" min="100" max="200000" onChange={this.saveSettings} />
                     </label>
                     <label>
                         <b>Export size</b>
-                        <input type="number" defaultValue={exportSize} id="exportSize" min="100" max="30000" onChange={(e) => {
+                        <input type="number" defaultValue={exportSize} id="exportSize" min="100" max="20000" onChange={(e) => {
                             this.saveSettings(e);
                             this.exportSize = Number(e.target.value);
                             this.zoom = this.size / (this.simulationSize / this.exportSize);

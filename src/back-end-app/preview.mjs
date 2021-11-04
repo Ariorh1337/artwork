@@ -7,8 +7,10 @@ import PromiseOutside from "./extra/PromiseOutside.mjs";
 
 import fs from "fs";
 
-export default function setup(settings) {
+export default function preview(settings) {
     const swear = PromiseOutside();
+
+    console.log(typeof settings);
 
     function sketch(p) {
         const { 
@@ -70,6 +72,7 @@ export default function setup(settings) {
             const x = pointer.x - exportSize / 2;
             const y = pointer.y - exportSize / 2;
 
+            p.translate(-x, -y);
             divide(p, -x, -y, width, height, 12);
 
             p.noStroke();
@@ -104,8 +107,8 @@ export default function setup(settings) {
 
                 particle.update(
                     p,
-                    pointer.x - exportSize / 2,
-                    pointer.y - exportSize / 2,
+                    0,
+                    0,
                     width,
                     height,
                     data

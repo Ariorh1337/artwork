@@ -1,6 +1,7 @@
 import * as http from "http";
 
 import setup from "./setup.mjs";
+import preview from "./preview.mjs";
 
 class Server {
 	storage = {};
@@ -38,6 +39,15 @@ class Server {
 					break;
 				case "/setup":
 					setup(data);
+
+					answer = {
+						statusCode: 200,
+						contentType: "application/json", 
+						data: `{"success":true}`,
+					};
+					break;
+				case "/preview":
+					preview(data);
 
 					answer = {
 						statusCode: 200,

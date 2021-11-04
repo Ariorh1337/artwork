@@ -15,6 +15,8 @@ export class Particle {
     ang: number;
     shrinkRatio: number;
     randoms: any[];
+    scale = 0;
+    real: any;
 
     constructor(
         p5: p5Types,
@@ -35,6 +37,7 @@ export class Particle {
         this.a = p5.createVector(0, 0);
         this.color = data?.color ?? p5.color(255);
         this.ang = 0;
+
         this.curve = p5.random(10, 30);
         this.angV = p5.random(-0.015, 0.015);
         this.shrinkRatio = p5.random(0.99, 0.995);
@@ -47,11 +50,18 @@ export class Particle {
         });
 
         // Down scale
-        const scale = downScale!.size / downScale!.simulationSize;
-        this.p.x *= scale;
-        this.p.y *= scale;
-        this.size.x *= scale;
-        this.size.y *= scale;
+        if (!downScale) return;
+        this.scale = downScale!.size / downScale!.simulationSize;
+        this.real = {
+            sizeX: this.size.x,
+            sizeY: this.size.y,
+            posX: this.p.x,
+            posY: this.p.y,
+        };
+        this.p.x *= this.scale;
+        this.p.y *= this.scale;
+        this.size.x *= this.scale;
+        this.size.y *= this.scale;
     }
 
     draw(p5: p5Types) {
@@ -70,24 +80,49 @@ export class Particle {
             p5.random(),
             p5.random(),
             p5.random()
-        ]
-        this.randoms.push({
-            x: offsets[0],
-            y: offsets[1],
-            angV: offsets[2],
-        });
+        ];
 
-        this.p.add(this.v)
-        this.p.x += offsets[0]
-        this.p.y += offsets[1]
-        let ang = p5.atan2(this.p.x - width / 2, this.p.y - height / 2)
+        this.p.add(this.v);
 
-        this.p.x += p5.sin(this.p.y / (this.curve + this.size.x * 5) + ang * 50) / 2
+        this.real.posX += offsets[0];
+        this.real.posY += offsets[1];
+        this.p.x = this.real.posX * this.scale;
+        this.p.y = this.real.posY * this.scale;
 
-        this.p.y += p5.cos(this.p.x / (this.curve + this.size.y * 5) + ang * 50) / 2
+        const posX = this.p.x / this.scale;
+        const posY = this.p.y / this.scale;
+
+        const ang = p5.atan2(posX - width / 2, posY - height / 2);
+        
+        const sizeX = this.size.x / this.scale;
+        const sizeY = this.size.y / this.scale;
+
+        this.real.posX += (p5.sin(posY / (this.curve + sizeX * 5) + ang * 50) / 2);
+        this.real.posY += (p5.cos(posX / (this.curve + sizeY * 5) + ang * 50) / 2);
+        this.p.x = this.real.posX * this.scale;
+        this.p.y = this.real.posY * this.scale;
+
         this.v.add(this.a)
         this.v.mult(0.99)
+
         this.size.mult(this.shrinkRatio)
-        this.ang += this.angV + offsets[2] / 50 + p5.sin(ang * 10) / 100
+
+        this.ang += this.angV + offsets[2] / 50 + p5.sin(ang * 10) / 100;
+
+        this.randoms.push({
+            posX: this.real.posX,
+            posY: this.real.posY,
+            ang: this.ang,
+            sizeX: this.size.x,
+            sizeY: this.size.y,
+        });
+
+        return { 
+            posX: this.real.posX,
+            posY: this.real.posY,
+            ang: this.ang,
+            sizeX: this.size.x,
+            sizeY: this.size.y,
+        };
     }
 }
