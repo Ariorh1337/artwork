@@ -1,7 +1,7 @@
 import p5 from "node-p5";
 
 import spawnAllowed from "./components/spawnAllowed.mjs";
-import spawnParticle from "./components/spawnParticle.mjs";
+import Particle from "./components/Particle.mjs";
 import draw from "./components/Draw.mjs";
 import saveToPng from "./components/saveToPng.mjs";
 
@@ -27,8 +27,6 @@ export default function setup(settings) {
 
         const particles = [];
 
-        const maxDraw = Math.max(...particleData.map(p => p.length));
-
         p.setup = () => {
             p.createCanvas(exportSize, exportSize);
 
@@ -43,8 +41,16 @@ export default function setup(settings) {
                 if (randoms[0] < 0.5) colors = randoms[1];
             
                 if (spawnAllowed(randoms[2], w, h, z)) {
-                    const randomsP = particleData[particles.length];
-                    const particle = spawnParticle(pp5, randoms[5], x, y, w, h, randomsP[0], scale);
+                    const lastParticle = particles.length;
+                    const randomsParticle = particleData[lastParticle];
+
+                    const particle = new Particle(pp5, {
+                        p: pp5.createVector(x, y),
+                        v: pp5.createVector(pp5.sin(x / 100) / 3, pp5.cos(y / 100) / 3),
+                        size: pp5.createVector(w, h),
+                        color: randoms[5]
+                    }, randomsParticle[0], scale);
+
                     particles.push(particle);
                     return;
                 }
