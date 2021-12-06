@@ -2,10 +2,10 @@ import p5 from "node-p5";
 
 import spawnAllowed from "./components/spawnAllowed.mjs";
 import spawnParticle from "./components/spawnParticle.mjs";
+import draw from "./components/Draw.mjs";
+import saveToPng from "./components/saveToPng.mjs";
 
 import Swear from "./extra/Swear.mjs";
-
-import fs from "fs";
 
 export default function setup(settings) {
     const swear = new Swear();
@@ -73,58 +73,23 @@ export default function setup(settings) {
             divide(p, -x, -y, width, height, 12);
 
             p.noStroke();
+            p.noLoop();
 
             swear.promise.then(() => {
-                p.loadPixels();
-                const image64 = p.canvas.toDataURL();
-
-                const base64Data = image64.replace(/^data:image\/png;base64,/, "");
-                fs.writeFile(`out_${Number(new Date())}.png`, base64Data, 'base64', function(err) {
-                    console.log(err);
-                });         
-            });
-
-            p.noLoop();
-        }
-
-        const drawFunc = () => {
-            particles.forEach(particle => particle.draw(p));
-
-            p.push();
-            p.pop();
-            p.noStroke();
-
-            p.loadPixels();
-        };
-
-        const drawLoop = (particleIndex) => {
-            particles.forEach((particle, index) => {
-                const data = particleData[index][particleIndex];
-                if (!data) return;
-
-                particle.update(
-                    p,
-                    pointer.x - exportSize / 2,
-                    pointer.y - exportSize / 2,
-                    width,
-                    height,
-                    data
-                );
+                saveToPng(p, `out_${Number(new Date())}.png`);      
             });
         }
 
-        p.draw = () => {
-            p.background(255);
-
-            drawFunc();
-
-            for (let i = 1; i < maxDraw; i++) {
-                drawLoop(i);
-                drawFunc();
-            }
-
-            swear.resolve(true);
-        }
+        p.draw = draw({
+            p5: p,
+            particles,
+            particlesData: particleData,
+            pointer,
+            width,
+            height,
+            exportSize,
+            resolve: swear.resolve,
+        });
     }
 
     console.log("Image requested: ", Number(new Date()));
