@@ -3,12 +3,12 @@ import p5 from "node-p5";
 import spawnAllowed from "./components/spawnAllowed.mjs";
 import spawnParticle from "./components/spawnParticle.mjs";
 
-import PromiseOutside from "./extra/PromiseOutside.mjs";
+import Swear from "./extra/Swear.mjs";
 
 import fs from "fs";
 
 export default function setup(settings) {
-    const swear = PromiseOutside();
+    const swear = new Swear();
 
     function sketch(p) {
         const { 
