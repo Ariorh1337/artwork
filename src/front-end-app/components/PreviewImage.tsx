@@ -32,7 +32,8 @@ export default class PreviewImage extends React.PureComponent<PreviewImageProps,
 			const canvasHTML = document.getElementById("leftCanvas") as HTMLCanvasElement;
 			canvasHTML.addEventListener("click", (e: any) => {
 				this.parent.pointer = this.parent.pointerToPossition(canvasHTML, e);
-				//@TODO сделать заимствование более явным
+				
+				/** @TODO сделать заимствование более явным */
 				this.parent.rightCanvas = this.parent.p5.get(
 					this.parent.pointer!.x - this.parent.zoom / 2,
 					this.parent.pointer!.y - this.parent.zoom / 2,

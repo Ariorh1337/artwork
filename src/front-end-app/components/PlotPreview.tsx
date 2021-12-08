@@ -7,7 +7,7 @@ import p5Types from "p5"; //Import this for typechecking and intellisense
 
 import PreviewImage from "./PreviewImage";
 
-import { colorsParse, Particle } from "./Particle";
+import Shape from "./Shape";
 
 const defaults = {
     simulationSize: 10000,
@@ -20,6 +20,10 @@ const simulationSize = Number(window.localStorage.getItem("simulationSize")) || 
 const exportSize = Number(window.localStorage.getItem("exportSize")) || defaults.exportSize;
 const colors1raw = window.localStorage.getItem("colors1") || defaults.colors1;
 const colors2raw = window.localStorage.getItem("colors2") || defaults.colors2;
+
+const colorsParse = (text: string) => {
+    return text.split("-").map((a: string) => "#" + a);
+};
 
 const colors1 = colorsParse(colors1raw);
 const colors2 = colorsParse(colors2raw);
@@ -35,7 +39,7 @@ export default class PlotPreview extends React.Component {
     zoom: number;
     
     // Randoms for server
-    particles?: Particle[];
+    particles?: Shape[];
     devideHistory?: any[];
 
     // Render
@@ -176,12 +180,26 @@ export default class PlotPreview extends React.Component {
     spawnParticle(value: p5Types.Color, x: number, y: number, w: number, h: number) {
         const p5 = this.p5!;
 
+/*
         return new Particle(p5, {
             p: p5.createVector(x, y),
             v: p5.createVector(p5.sin(x / 100) / 3, p5.cos(y / 100) / 3),
             size: p5.createVector(w, h),
             color: value
         }, { size: this.size, simulationSize: this.simulationSize });
+*/
+
+        return new Shape(p5)
+            .setData({
+                p: p5.createVector(x, y),
+                v: p5.createVector(p5.sin(x / 100) / 3, p5.cos(y / 100) / 3),
+                size: p5.createVector(w, h),
+                color: value
+            })
+            .setScale({
+                size: this.size,
+                simulation: this.simulationSize
+            });
     }
 
     pointerToPossition(canvas: HTMLCanvasElement, event: any) {
@@ -225,11 +243,11 @@ export default class PlotPreview extends React.Component {
                 <div className="settings">
                     <label>
                         <b>Simulation size</b>
-                        <input type="number" defaultValue={simulationSize} id="simulationSize" min="100" max="200000" onChange={this.saveSettings} />
+                        <input type="number" defaultValue={simulationSize} id="simulationSize" min="100" max="200000" step="100" onChange={this.saveSettings} />
                     </label>
                     <label>
                         <b>Export size</b>
-                        <input type="number" defaultValue={exportSize} id="exportSize" min="100" max="20000" onChange={(e) => {
+                        <input type="number" defaultValue={exportSize} id="exportSize" min="100" max="20000" step="100" onChange={(e) => {
                             this.saveSettings(e);
                             this.exportSize = Number(e.target.value);
                             this.zoom = this.size / (this.simulationSize / this.exportSize);
