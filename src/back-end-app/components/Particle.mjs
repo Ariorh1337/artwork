@@ -1,7 +1,7 @@
 export const colors1 = "fbaf00-ffd639-ffa3af-007cbe-00af54-fff-f24".split("-").map(a => "#" + a)
 export const colors2 = "000-083d77-ebebd3-f4d35e-ee964b-f95738".split("-").map(a => "#" + a)
 
-export class Particle {
+export default class Particle {
     /**
      * 
      * @param {p5Types} p5 

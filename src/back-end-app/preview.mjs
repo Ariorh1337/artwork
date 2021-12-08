@@ -1,18 +1,16 @@
 import p5 from "node-p5";
 
 import spawnAllowed from "./components/spawnAllowed.mjs";
-import spawnParticle from "./components/spawnParticle.mjs";
+import Particle from "./components/Particle.mjs";
+import Draw from "./components/Draw.mjs";
 
 import Swear from "./extra/Swear.mjs";
 
-import fs from "fs";
-
 export default function preview(settings) {
+    const swearResult = new Swear();
     const swear = new Swear();
 
-    console.log(typeof settings);
-
-    function sketch(p) {
+    const sketch = function(p) {
         const { 
             pointer,
             simulationSize,
@@ -29,8 +27,6 @@ export default function preview(settings) {
 
         const particles = [];
 
-        const maxDraw = Math.max(...particleData.map(p => p.length));
-
         p.setup = () => {
             p.createCanvas(exportSize, exportSize);
 
@@ -45,8 +41,16 @@ export default function preview(settings) {
                 if (randoms[0] < 0.5) colors = randoms[1];
             
                 if (spawnAllowed(randoms[2], w, h, z)) {
-                    const randomsP = particleData[particles.length];
-                    const particle = spawnParticle(pp5, randoms[5], x, y, w, h, randomsP[0], scale);
+                    const lastParticle = particles.length;
+                    const randomsParticle = particleData[lastParticle];
+
+                    const particle = new Particle(pp5, {
+                        p: pp5.createVector(x, y),
+                        v: pp5.createVector(pp5.sin(x / 100) / 3, pp5.cos(y / 100) / 3),
+                        size: pp5.createVector(w, h),
+                        color: randoms[5]
+                    }, randomsParticle[0], scale);
+
                     particles.push(particle);
                     return;
                 }
@@ -72,67 +76,36 @@ export default function preview(settings) {
             const x = pointer.x - exportSize / 2;
             const y = pointer.y - exportSize / 2;
 
-            p.translate(-x, -y);
             divide(p, -x, -y, width, height, 12);
 
             p.noStroke();
+            p.noLoop();
 
             swear.promise.then(() => {
                 p.loadPixels();
+
                 const image64 = p.canvas.toDataURL();
-
                 const base64Data = image64.replace(/^data:image\/png;base64,/, "");
-                fs.writeFile(`out_${Number(new Date())}.png`, base64Data, 'base64', function(err) {
-                    console.log(err);
-                });         
-            });
 
-            p.noLoop();
-        }
-
-        const drawFunc = () => {
-            particles.forEach(particle => particle.draw(p));
-
-            p.push();
-            p.pop();
-            p.noStroke();
-
-            p.loadPixels();
-        };
-
-        const drawLoop = (particleIndex) => {
-            particles.forEach((particle, index) => {
-                const data = particleData[index][particleIndex];
-                if (!data) return;
-
-                particle.update(
-                    p,
-                    0,
-                    0,
-                    width,
-                    height,
-                    data
-                );
+                swearResult.resolve(base64Data);    
             });
         }
 
-        p.draw = () => {
-            p.background(255);
-
-            drawFunc();
-
-            for (let i = 1; i < maxDraw; i++) {
-                drawLoop(i);
-                drawFunc();
-            }
-
-            swear.resolve(true);
-        }
+        p.draw = Draw({
+            p5: p,
+            particles,
+            particlesData: particleData,
+            pointer,
+            width,
+            height,
+            exportSize,
+            resolve: swear.resolve,
+        });
     }
 
     console.log("Image requested: ", Number(new Date()));
 
     p5.createSketch(sketch);
 
-    return;
+    return swearResult.promise;
 }

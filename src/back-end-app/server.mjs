@@ -27,6 +27,7 @@ class Server {
 				data = JSON.parse(question);
 			} catch(err) {
 				if (request.url === "/setup") request.url = "/handshake";
+				if (request.url === "/preview") request.url = "/handshake";
 			}
 
 			switch (request.url) {
@@ -47,13 +48,19 @@ class Server {
 					};
 					break;
 				case "/preview":
-					preview(data);
+					async = true;
 
-					answer = {
-						statusCode: 200,
-						contentType: "application/json", 
-						data: `{"success":true}`,
-					};
+					preview(data).then((base64) => {
+						const answer = {
+							statusCode: 200,
+							contentType: "image/png",
+							contentEncodeng: "base64",
+							data: base64,
+						};
+
+						this.responce(response, answer);
+					});
+
 					break;
 				default:
 					answer = {

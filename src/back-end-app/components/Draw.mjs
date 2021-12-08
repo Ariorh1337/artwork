@@ -1,4 +1,4 @@
-export default function draw(settings) {
+export default function Draw(settings) {
     const {
         p5,
         particles,
